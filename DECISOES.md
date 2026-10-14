@@ -97,6 +97,36 @@ Considerei que o problema poderia estar na data armazenada ou na lógica de agen
 
 20 minutos.
 
+## Correção da verificação de conflitos entre horários
+
+**O que eu vi**
+
+A função `temConflito` verificava conflitos comparando apenas o horário de início das consultas. Com isso, dois agendamentos com horários de início diferentes, mas com duração sobreposta, poderiam ser considerados válidos.
+
+**O que achei que era**
+
+Identifiquei que a lógica precisava considerar o intervalo completo de cada consulta, e não apenas se os horários de início eram iguais.
+
+**Como confirmei**
+
+Analisei a implementação da função e percebi que a comparação `marcada.hora === nova.hora` não identificava sobreposições entre consultas com horários de início diferentes.
+
+**O que fiz e por quê**
+
+Modifiquei a função para calcular os horários de início e fim de cada consulta em minutos e verificar se os intervalos se sobrepõem. Assim, a função passou a identificar conflitos mesmo quando as consultas começam em horários diferentes.
+
+**Como testei**
+
+Verifiquei a lógica de comparação dos intervalos para garantir que consultas com sobreposição fossem identificadas como conflitos, enquanto consultas consecutivas, sem sobreposição, fossem permitidas.
+
+**O que considerei e descartei**
+
+Considerei utilizar diretamente as colunas `inicio` e `fim` para calcular os intervalos, mas, como a interface `Horario` já disponibilizava o tipo da consulta, percebi que poderia utilizar o mapa `DURACAO_MINUTOS` para determinar a duração de cada atendimento. Optei por essa abordagem para reaproveitar informações já disponíveis na aplicação e evitar a necessidade de adicionar novos campos à interface.
+
+**Quanto tempo levou**
+
+15 minutos
+
 ---
 
 ## Lembrete com n8n (bônus, se você fizer)
