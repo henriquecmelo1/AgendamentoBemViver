@@ -38,6 +38,36 @@ Considerei limpar a agenda com `setAgenda(null)` no início do `useEffect`, mas 
 
 20 minutos, pois foi a primeira coisa que fiz ao abrir o projeto e ainda estava me situando com o código.
 
+## Horário continuava indisponível após cancelamento
+
+**O que eu vi**
+
+Foi relatado que, após alguém cancelar uma consulta, outras pessoas continuavam sem conseguir marcar naquele mesmo horário.
+
+**O que achei que era**
+
+Pelo relato, suspeitei que faltava um filtro na consulta ao banco de dados. A query parecia considerar apenas a data e o profissional, sem levar em conta o status da consulta. Assim, consultas canceladas continuavam sendo consideradas ao verificar a disponibilidade do horário.
+
+**Como confirmei**
+
+Investiguei o fluxo de agendamento para identificar se o problema acontecia na página do recepcionista ou na página do paciente. Identifiquei que estava na página do paciente e localizei a query responsável por verificar os horários disponíveis.
+
+**O que fiz e por quê**
+
+Ajustei a query para considerar o status das consultas, desconsiderando as que foram canceladas na verificação de disponibilidade. Fiz isso para garantir que horários liberados por cancelamentos pudessem ser agendados novamente.
+
+**Como testei**
+
+Verifiquei a lógica da query para garantir que consultas canceladas não fossem mais consideradas na verificação de disponibilidade.
+
+**O que considerei e descartei**
+
+Como o problema estava na consulta ao banco de dados, não foi necessário alterar o fluxo de agendamento ou implementar novas regras de negócio. A correção foi feita diretamente na query.
+
+**Quanto tempo levou**
+
+10 minutos
+
 ---
 
 ## Lembrete com n8n (bônus, se você fizer)
