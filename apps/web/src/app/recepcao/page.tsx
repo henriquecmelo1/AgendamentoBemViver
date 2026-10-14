@@ -42,7 +42,7 @@ export default function RecepcaoPage() {
       </div>
 
       {erro && <Alert>{erro}</Alert>}
-      {profissionalId && data && <AgendaDoDia profissionalId={profissionalId} data={data} />}
+      {profissionalId && data && <AgendaDoDia key={`${profissionalId}-${data}`} profissionalId={profissionalId} data={data} />}
     </div>
   )
 }
