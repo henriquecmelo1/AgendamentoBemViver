@@ -45,7 +45,7 @@ export default function AgendaDoDia({ profissionalId, data }: AgendaDoDiaProps) 
     <div className="grid items-start gap-6 lg:grid-cols-[1fr_320px]">
       <Card className="space-y-3">
         <h2 className="text-lg font-semibold first-letter:uppercase">
-          {new Date(agenda.data).toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: '2-digit' })}
+          {new Date(`${agenda.data}T12:00:00`).toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: '2-digit' })}
         </h2>
         {agenda.folga && <Alert variante="aviso">Dia bloqueado como folga do profissional.</Alert>}
         {erro && <Alert>{erro}</Alert>}
