@@ -67,6 +67,35 @@ Como o problema estava na consulta ao banco de dados, não foi necessário alter
 **Quanto tempo levou**
 
 10 minutos
+## Data da consulta exibida com um dia de diferença
+
+**O que eu vi**
+
+Enquanto mexia na aplicação, percebi que a data exibida na agenda não correspondia à data esperada. Depois, relacionei esse comportamento ao relato de uma paciente que via a consulta na quarta-feira, enquanto a recepção a via na terça-feira.
+
+**O que achei que era**
+
+Suspeitei de um problema de fuso horário na conversão da data, fazendo com que ela fosse exibida com um dia de diferença dependendo de como era interpretada pelo JavaScript.
+
+**Como confirmei**
+
+Comparei a data armazenada com a data exibida na interface e identifiquei que o uso de `new Date(agenda.data)` estava interpretando a data como UTC, causando a mudança para o dia anterior no fuso horário brasileiro.
+
+**O que fiz e por quê**
+
+Ajustei a conversão da data para evitar que o fuso horário alterasse o dia exibido. Inicialmente, utilizei `T12:00:00` para reduzir o risco de mudança de dia, mas depois refinei a solução para trabalhar explicitamente com UTC.
+
+**Como testei**
+
+Verifiquei a data exibida na agenda para confirmar que o dia correspondia à data esperada, sem retroceder para o dia anterior.
+
+**O que considerei e descartei**
+
+Considerei que o problema poderia estar na data armazenada ou na lógica de agendamento, mas identifiquei que a inconsistência acontecia na formatação da data no front-end. Também considerei separar manualmente dia, mês e ano ou utilizar `T12:00:00`, mas optei por usar `T00:00:00Z` junto com `timeZone: 'UTC'` no `toLocaleDateString`. Essa abordagem deixa explícito que a data deve ser interpretada e formatada em UTC, evitando dependência do fuso horário do navegador e garantindo maior consistência para usuários em diferentes localizações.
+
+**Quanto tempo levou**
+
+20 minutos.
 
 ---
 
