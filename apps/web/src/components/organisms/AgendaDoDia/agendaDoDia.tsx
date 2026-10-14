@@ -22,7 +22,7 @@ export default function AgendaDoDia({ profissionalId, data }: AgendaDoDiaProps) 
         setErro('')
       })
       .catch((e: Error) => setErro(e.message))
-  }, [data, atualizacao])
+  }, [profissionalId, data, atualizacao])
 
   function recarregar() {
     setAtualizacao((n) => n + 1)
