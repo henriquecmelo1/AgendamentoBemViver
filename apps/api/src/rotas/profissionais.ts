@@ -92,6 +92,17 @@ rotasProfissionais.post('/:id/folgas', permitir('profissional', 'recepcao'), asy
     return
   }
 
-  const folga = await prisma.folga.create({ data: { profissionalId, data } })
+  const folga = await prisma.$transaction(async (tx) => {
+
+    const novaFolga = await tx.folga.create({ data: { profissionalId, data } })
+
+    await tx.consulta.updateMany({
+      where: { profissionalId, data, status: 'agendada' },
+      data: { status: 'cancelada', canceladaEm: new Date() },
+    })
+    
+    return novaFolga
+  })
+
   res.status(201).json(folga)
 })
