@@ -127,6 +127,38 @@ Considerei utilizar diretamente as colunas `inicio` e `fim` para calcular os int
 
 15 minutos
 
+
+## Estado de carregamento infinito em novos clientes
+
+**O que eu vi**
+
+A tela de minhas consultas ficava em carregamento infinito para novos clientes que ainda não tinham consultas marcadas.
+
+**O que achei que era**
+
+Percebi que o problema estava na condição utilizada para exibir o carregamento. A aplicação usava `consultas.length === 0` para identificar se os dados ainda estavam sendo carregados, mas essa condição também era verdadeira quando a consulta à API retornava uma lista vazia.
+
+**Como confirmei**
+
+Analisei o componente `MinhasConsultas` e identifiquei que não havia uma distinção entre o estado de carregamento e o resultado de uma consulta sem registros.
+
+**O que fiz e por quê**
+
+Criei um estado específico chamado `carregando`, inicializado como `true`, e utilizei o método `finally` da requisição para desativá-lo quando a consulta à API terminasse, independentemente de sucesso ou erro.
+
+Também alterei a renderização para exibir uma mensagem informando que o usuário ainda não tem consultas marcadas quando a lista estiver vazia e não houver erro. Dessa forma, a aplicação diferencia o carregamento de uma resposta sem resultados.
+
+**Como testei**
+
+Verifiquei os diferentes estados da tela: enquanto a requisição está em andamento, quando retorna consultas, quando retorna uma lista vazia e quando ocorre um erro. Além disso, usei o throttling do DevTools para testar com uma internet mais lenta e ficar mais fácil de identificar o estado de carregamento.
+
+**O que considerei e descartei**
+
+Considerei utilizar `null` como valor inicial de `consultas` e verificar se o estado era diferente de `null` para identificar quando a requisição terminasse. Porém, achei melhor criar um estado específico para o carregamento, separando essa informação dos dados retornados pela API. Assim, a lógica fica mais explícita e cada estado tem uma responsabilidade bem definida.
+
+**Quanto tempo levou**
+
+10 minutos
 ---
 
 ## Lembrete com n8n (bônus, se você fizer)
