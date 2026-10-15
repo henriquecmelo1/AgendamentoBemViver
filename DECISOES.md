@@ -218,6 +218,37 @@ Optei por reutilizar a função `temConflito`, que já verifica a sobreposição
 **Quanto tempo levou**
 
 10 minutos.
+
+
+## Folga não cancelava consultas já marcadas
+
+**O que eu vi**
+
+Ao registrar uma folga para um profissional, as consultas que já estavam agendadas para aquele dia continuavam com o status de agendadas. Isso poderia gerar inconsistências na agenda, já que o profissional estaria indisponível, mas os pacientes continuariam com consultas marcadas.
+
+**O que achei que era**
+
+O cadastro da folga apenas bloqueava novos agendamentos, sem tratar as consultas existentes para aquela data.
+
+**Como confirmei**
+
+Analisei a implementação da rota responsável por registrar folgas e identifiquei que ela apenas criava o registro na tabela de folgas, sem atualizar o status das consultas existentes.
+
+**O que fiz e por quê**
+
+Utilizei uma transação do Prisma (`$transaction`) para criar a folga e cancelar todas as consultas ainda agendadas para o profissional naquela data. Também registrei a data do cancelamento (`canceladaEm`). Dessa forma, as duas operações são atômicas: se uma falhar, nenhuma alteração é persistida.
+
+**Como testei**
+
+Verifiquei o fluxo de criação da folga e o cancelamento das consultas agendadas, garantindo que as alterações fossem executadas dentro da mesma transação. Além disso, usei o prisma studio para acompanhar as consultas diretamente no banco.
+
+**O que considerei e descartei**
+
+Considerei manter as consultas agendadas e apenas bloquear novos agendamentos, mas descartei essa abordagem porque deixaria consultas ativas em um dia no qual o profissional não estaria disponível. Optei pelo cancelamento automático para manter a agenda consistente.
+
+**Quanto tempo levou**
+
+15 minutos.
 ---
 
 ## Lembrete com n8n (bônus, se você fizer)
