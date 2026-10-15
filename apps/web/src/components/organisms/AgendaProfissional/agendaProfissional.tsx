@@ -11,6 +11,7 @@ import TabelaConsultas from '@/components/organisms/TabelaConsultas/tabelaConsul
 import { useSessao } from '@/hooks/useSessao'
 import { api } from '@/lib/api'
 import { formatarData } from '@/lib/formato'
+import ModalConfirmarFolga from './modalConfirmarFolga'
 
 export default function AgendaProfissional() {
   const profissionalId = useSessao()?.usuario.id
@@ -18,6 +19,7 @@ export default function AgendaProfissional() {
   const [agenda, setAgenda] = useState<Agenda | null>(null)
   const [erro, setErro] = useState('')
   const [confirmando, setConfirmando] = useState(false)
+  const [salvando, setSalvando] = useState(false)
   const [atualizacao, setAtualizacao] = useState(0)
 
   useEffect(() => {
@@ -31,14 +33,19 @@ export default function AgendaProfissional() {
   }, [profissionalId, data, atualizacao])
 
   async function bloquearDia() {
+    setSalvando(true)
     try {
       await api(`/profissionais/${profissionalId}/folgas`, { metodo: 'POST', corpo: { data } })
       setConfirmando(false)
       setAtualizacao((n) => n + 1)
     } catch (e) {
       setErro((e as Error).message)
+    } finally {
+      setSalvando(false)
     }
   }
+
+  const consultasAgendadas = agenda?.consultas.filter((consulta) => consulta.status === 'agendada').length ?? 0
 
   return (
     <div className="space-y-4">
@@ -59,15 +66,15 @@ export default function AgendaProfissional() {
             Bloquear este dia como folga
           </Button>
         )}
-        {confirmando && (
-          <div className="flex gap-2">
-            <Button onClick={bloquearDia}>Confirmar folga</Button>
-            <Button variante="secundario" onClick={() => setConfirmando(false)}>
-              Voltar
-            </Button>
-          </div>
-        )}
       </div>
+
+      <ModalConfirmarFolga
+        aberto={confirmando}
+        quantidadeConsultas={consultasAgendadas}
+        salvando={salvando}
+        onConfirmar={bloquearDia}
+        onFechar={() => setConfirmando(false)}
+      />
 
       {erro && <Alert>{erro}</Alert>}
 
