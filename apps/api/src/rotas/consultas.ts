@@ -61,6 +61,17 @@ rotasConsultas.post('/', permitir('paciente', 'recepcao'), async (req, res) => {
     return
   }
 
+  const consultasDoPaciente = await prisma.consulta.findMany({ where: { pacienteId, data, status: 'agendada' } })
+  if (temConflito(consultasDoPaciente, { hora, tipo })) {
+    res.status(409).json({
+      erro:
+        req.usuario.perfil === 'paciente'
+          ? 'Você já tem uma consulta nesse horário'
+          : 'O paciente já tem uma consulta nesse horário',
+    })
+    return
+  }
+
   const inicio = instante(data, hora)
   const fim = new Date(inicio.getTime() + DURACAO_MINUTOS[tipo] * 60_000)
   const consulta = await prisma.consulta.create({
