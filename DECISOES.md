@@ -186,6 +186,38 @@ Testei antes e depois da migration com um script gerado por IA, que dispara requ
 
 **Quanto tempo levou**
 Cerca de 1h. A maior parte foi para entender qual era o problema de fato e como resolvê-lo, já que a lógica de sobreposição estava correta e o erro estava na falta de atomicidade.
+
+## Paciente conseguia marcar consultas em horários conflitantes
+
+**O que eu vi**
+
+Percebi, enquanto utilizava a aplicação, que um mesmo paciente conseguia marcar consultas com horários conflitantes para si.
+
+**O que achei que era**
+
+Ao investigar o código, percebi que não existia nenhuma restrição para impedir que um paciente marcasse duas consultas no mesmo horário ou em intervalos sobrepostos.
+
+**Como confirmei**
+
+Analisei o fluxo de agendamento no código e identifiquei que a verificação de conflitos não considerava as consultas que o próprio paciente já tinha marcado.
+
+**O que fiz e por quê**
+
+Adicionei uma consulta ao banco de dados para buscar os agendamentos existentes do paciente na mesma data, com status `agendada`. Em seguida, utilizei a função `temConflito` para verificar se o novo agendamento entrava em conflito com algum deles.
+
+Caso exista conflito, a API retorna o status HTTP `409` e uma mensagem adequada, diferenciando o agendamento feito pelo próprio paciente daquele realizado por outro usuário em seu nome.
+
+**Como testei**
+
+Testei o fluxo pela interface antes e depois da alteração. Verifiquei que consultas conflitantes do mesmo paciente eram impedidas, inclusive quando tinham horários de início diferentes, mas seus intervalos se sobrepunham. Também verifiquei que agendamentos sem conflito continuavam sendo permitidos.
+
+**O que considerei e descartei**
+
+Optei por reutilizar a função `temConflito`, que já verifica a sobreposição entre os intervalos das consultas, em vez de comparar apenas os horários de início. Dessa forma, a validação também considera consultas com durações diferentes e horários parcialmente sobrepostos.
+
+**Quanto tempo levou**
+
+10 minutos.
 ---
 
 ## Lembrete com n8n (bônus, se você fizer)
