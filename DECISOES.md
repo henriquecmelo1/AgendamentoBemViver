@@ -159,6 +159,33 @@ Considerei utilizar `null` como valor inicial de `consultas` e verificar se o es
 **Quanto tempo levou**
 
 10 minutos
+
+## Corrida na marcação de consultas: dois usuários conseguiam marcar o mesmo horário
+
+**O que eu vi**
+Dois usuários conseguiam marcar uma consulta para o mesmo profissional, na mesma data e no mesmo horário, quando as requisições chegavam quase ao mesmo tempo.
+
+**O que achei que era**
+Uma race condition do tipo *check-then-act*. A rota `POST /consultas` busca as consultas marcadas, verifica o conflito com `temConflito` e só depois cria a consulta, em operações separadas. Se duas requisições leem o banco antes de qualquer uma inserir, as duas concluem que o horário está livre.
+
+**Como confirmei**
+Li o código de `consultas.ts` e `agenda.ts` e vi que a lógica de sobreposição está correta, mas a checagem e a gravação não são atômicas. No `schema.prisma` só existe um índice por profissional e data, que não impede sobreposição. Depois reproduzi o problema com um script que dispara 10 requisições simultâneas para o mesmo horário, antes de alterar qualquer coisa. Resultado: `{ '201': 8, '409': 2 }`, ou seja, 8 consultas criadas no mesmo horário.
+
+**O que fiz e por quê**
+Criei uma migration com uma exclusion constraint no Postgres (`btree_gist` + `tstzrange(inicio, fim, '[)')`), filtrada por `status = 'agendada'`. Assim o banco garante a regra, independente de quantas instâncias da API estiverem rodando. O filtro de status permite remarcar um horário depois de um cancelamento. Mantive o `temConflito` na rota para responder rápido no caso comum. Não alterei o código da rota: o erro da constraint ainda não é tratado.
+
+**Como testei**
+Testei antes e depois da migration com um script gerado por IA, que dispara requisições simultâneas para o mesmo profissional e horário e conta os status recebidos. O script cancela as consultas criadas no final, para não impedir a criação da constraint.
+- Antes da migration: `{ '201': 8, '409': 2 }` (8 consultas no mesmo horário).
+- Depois da migration: `{ '201': 1, '409': 2, '500': 7 }`. Só 1 consulta foi criada, então o bug de dados duplicados foi resolvido. Quem perde a corrida para a constraint recebe 500 em vez de 409, porque o erro é levantado pelo banco. Pela interface, em uso normal, a resposta continua sendo 409, já que o `temConflito` pega o caso em que uma requisição não se sobrepõe à outra.
+
+**O que considerei e descartei**
+- Advisory lock por profissional dentro de uma transação: resolve, mas só protege os caminhos de código que o usam. Scripts, seeds ou rotas futuras poderiam burlar a regra.
+- Manter só a checagem na aplicação: é justamente o que causa o bug.
+- Tratar o erro `23P01` na rota para devolver 409: fica como próximo passo, para trocar o 500 por uma resposta adequada em caso de concorrência real.
+
+**Quanto tempo levou**
+Cerca de 1h. A maior parte foi para entender qual era o problema de fato e como resolvê-lo, já que a lógica de sobreposição estava correta e o erro estava na falta de atomicidade.
 ---
 
 ## Lembrete com n8n (bônus, se você fizer)
