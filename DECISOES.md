@@ -236,7 +236,7 @@ Analisei a implementação da rota responsável por registrar folgas e identifiq
 
 **O que fiz e por quê**
 
-Utilizei uma transação do Prisma (`$transaction`) para criar a folga e cancelar todas as consultas ainda agendadas para o profissional naquela data. Também registrei a data do cancelamento (`canceladaEm`). Dessa forma, as duas operações são atômicas: se uma falhar, nenhuma alteração é persistida.
+Utilizei uma transação do Prisma (`$transaction`) para criar a folga e cancelar todas as consultas ainda agendadas para o profissional naquela data. Também registrei a data do cancelamento (`canceladaEm`). Dessa forma, as duas operações são atômicas: se uma falhar, nenhuma alteração é persistida. Além disso, adicionei um modal (para chamar mais a atenção do profissional) informando que todas as consultas seriam canceladas (caso tenha alguma marcada).
 
 **Como testei**
 
