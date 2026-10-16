@@ -116,6 +116,8 @@ export default function AgendarConsulta() {
         )}
       </Card>
 
+      <Alert variante="aviso">Cancelamentos só podem ser feitos com pelo menos 24 horas de antecedência.</Alert>
+
       {erro && <Alert>{erro}</Alert>}
 
       <Button disabled={!hora || enviando} onClick={confirmar} className="w-full">
