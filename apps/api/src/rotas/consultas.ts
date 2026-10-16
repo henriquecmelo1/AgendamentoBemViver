@@ -20,23 +20,23 @@ async function tratarMarcacaoUrgente(dados: {
       where: { profissionalId: dados.profissionalId, data: dados.data, status: 'agendada' },
     })
     const conflitos = marcadas.filter((consulta) => temConflito([consulta], dados))
-    const idsSubstituidos = new Set(conflitos.map((consulta) => consulta.id))
     const consultasDoPaciente = await tx.consulta.findMany({
       where: { pacienteId: dados.pacienteId, data: dados.data, status: 'agendada' },
     })
-    if (temConflito(consultasDoPaciente.filter((consulta) => !idsSubstituidos.has(consulta.id)), dados)) {
-      return { erro: 'paciente' as const }
-    }
+    const conflitosDoPaciente = consultasDoPaciente.filter((consulta) => temConflito([consulta], dados))
+    const consultasSubstituidas = new Map(
+      [...conflitos, ...conflitosDoPaciente].map((consulta) => [consulta.id, consulta]),
+    )
 
-    if (conflitos.length > 0) {
+    if (consultasSubstituidas.size > 0) {
       await tx.consulta.updateMany({
-        where: { id: { in: conflitos.map((consulta) => consulta.id) }, status: 'agendada' },
+        where: { id: { in: [...consultasSubstituidas.keys()] }, status: 'agendada' },
         data: { status: 'cancelada', canceladaEm: new Date() },
       })
     }
 
     const consulta = await tx.consulta.create({ data: dados })
-    return { consulta, consultasCanceladas: conflitos.length }
+    return { consulta, consultasCanceladas: consultasSubstituidas.size }
   })
 }
 
@@ -104,10 +104,6 @@ rotasConsultas.post('/', permitir('paciente', 'recepcao'), async (req, res) => {
 
   if (urgente) {
     const resultado = await tratarMarcacaoUrgente(dadosConsulta)
-    if ('erro' in resultado) {
-      res.status(409).json({ erro: 'O paciente já tem uma consulta nesse horário' })
-      return
-    }
     res.status(201).json({ ...resultado.consulta, consultasCanceladas: resultado.consultasCanceladas })
     return
   }
