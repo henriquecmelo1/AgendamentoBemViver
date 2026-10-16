@@ -475,4 +475,8 @@ Testei cada etapa isoladamente antes de juntar tudo:
 
 ## Como usei IA
 
+Usei IA para formatar toda a documentação do projeto. Eu explicava de forma simples o que tinha feito, como tinha feito, o que observei, o que considerei e descartei e quanto tempo gastei, tudo na mesma frase, e a IA organizava o texto conforme o template. O conteúdo e as decisões são meus, e a IA ficou com a redação e a estrutura. Também usei no n8n, onde tinha pouca experiência, já que só havia usado a plataforma poucas vezes. A IA me ajudou a montar o fluxo do lembrete, a entender nós como o Wait e o Loop Over Items e a investigar problemas durante os testes.
+
+Usei IA também para gerar código, sempre revisando o resultado. O uso principal foi em componentes, que a IA produz bem mais rápido do que eu escreveria à mão. Durante todo o processo, fiscalizei o que ela entregava e apontei quando o código estava ruim, quando um componente ficava grande demais e quando algo precisava ser reorganizado, pedindo ajustes até chegar a um resultado que eu aprovasse.
+
 ## O que ficou de fora
