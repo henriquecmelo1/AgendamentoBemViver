@@ -480,3 +480,16 @@ Usei IA para formatar toda a documentação do projeto. Eu explicava de forma si
 Usei IA também para gerar código, sempre revisando o resultado. O uso principal foi em componentes, que a IA produz bem mais rápido do que eu escreveria à mão. Durante todo o processo, fiscalizei o que ela entregava e apontei quando o código estava ruim, quando um componente ficava grande demais e quando algo precisava ser reorganizado, pedindo ajustes até chegar a um resultado que eu aprovasse.
 
 ## O que ficou de fora
+
+## O que ficou de fora
+
+Das dez funcionalidades pedidas, implementei quatro: lembrete automático (24h antes), relatório de faltas, histórico de consultas e busca de profissionais por especialidade. As outras seis ficaram de fora por falta de tempo, e a ordem de prioridade acima mostra por que elas vieram depois:
+
+- **Confirmação de presença pelo paciente:** é a que mais lamento não ter feito, porque complementa o lembrete e também ajudaria a reduzir faltas. O plano está descrito na seção de prioridades (token assinado no e-mail do lembrete e rota pública para confirmar). Implementei outras antes porque eram mais triviais e se encaixariam no meu cronograma.
+- **Lista de espera para horários liberados:** também só tem o plano descrito. Dependeria de uma tabela nova e de notificação quando uma consulta fosse cancelada.
+- **Remarcação pelo próprio paciente:** não fiz porque já dá para cancelar e marcar de novo, então busquei funcionalidades que tivessem mais impacto na plataforma.
+- **Bloqueio de agenda por período:** o profissional já consegue registrar folga por dia. A evolução seria um seletor de intervalo de datas que cria as folgas de cada dia.
+- **Exportação da agenda do dia em PDF:** é uma conveniência, já que a agenda do dia pode ser vista na tela.
+- **Tema escuro na área do paciente:** apenas estético, sem impacto funcional.
+
+**Testes automatizados:** eu planejava escrever testes automatizados, mas, com pouco tempo, priorizei as funcionalidades. Em vez disso, fui testando manualmente cada parte conforme mexia nela. Isso reduz o risco no momento, mas não protege contra regressões: com mais tempo, o primeiro passo seria cobrir com testes as regras de conflito de horário, o relatório de faltas e a rota `/integracoes/lembretes`. Fui criando os testes conforme eu criava uma nova funcionalidade, mas a cobertura ainda ficou muito baixa.
