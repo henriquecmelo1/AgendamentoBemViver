@@ -249,6 +249,36 @@ Considerei manter as consultas agendadas e apenas bloquear novos agendamentos, m
 **Quanto tempo levou**
 
 15 minutos.
+
+## Redução de faltas em consultas com lembretes automáticos
+
+**O que eu vi**
+
+Pacientes faltam às consultas com frequência, inclusive alguns que faltam toda semana. Isso prejudica a organização da agenda e gera horários ociosos para os profissionais.
+
+**O que achei que era**
+
+Parte das faltas pode acontecer por esquecimento ou falta de confirmação dos pacientes sobre os horários agendados. Um lembrete antecipado poderia ajudar a reduzir esse problema.
+
+**Como confirmei**
+
+Identifiquei a necessidade de avisar os pacientes sobre as consultas agendadas com antecedência, sem depender de um profissional para entrar em contato manualmente com cada um.
+
+**O que fiz e por quê**
+
+Criei um workflow no n8n que envia um e-mail aos pacientes exatamente 24 horas antes das consultas agendadas. A solução busca reduzir faltas causadas por esquecimento e diminuir a necessidade de contato manual pela equipe.
+
+**Como testei**
+
+Comecei testando cada etapa com valores absolutos para facilitar a identificação de possíveis erros, utilizando, por exemplo, um `Wait` de 1 segundo e datas hard-coded. Depois, validei a lógica de cálculo das datas e o fluxo de execução para garantir que os lembretes fossem enviados no momento correto.
+
+**O que considerei e descartei**
+
+Considerei outras abordagens, como enviar todos os lembretes às 8h do dia anterior, mas descartei essa opção porque o requisito era enviar os e-mails com 24 horas de antecedência em relação a cada consulta. Também considerei realizar consultas à API e ao banco de dados a cada 30 minutos para identificar os próximos lembretes, mas descartei essa estratégia para evitar chamadas excessivas e processamento desnecessário. Optei por uma abordagem que atende ao prazo exigido sem gerar esse volume de requisições.
+
+**Quanto tempo levou**
+
+2h e meia
 ---
 
 ## Lembrete com n8n (bônus, se você fizer)
