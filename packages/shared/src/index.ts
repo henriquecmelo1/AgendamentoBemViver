@@ -2,6 +2,12 @@ export type Perfil = 'paciente' | 'recepcao' | 'profissional'
 export type TipoConsulta = 'primeira' | 'retorno'
 export type StatusConsulta = 'agendada' | 'cancelada' | 'realizada' | 'faltou'
 
+export const ANTECEDENCIA_MINIMA_CANCELAMENTO_MS = 24 * 60 * 60 * 1000
+
+export function podeCancelarConsulta(inicio: Date | string, agora = new Date()) {
+  return new Date(inicio).getTime() - agora.getTime() >= ANTECEDENCIA_MINIMA_CANCELAMENTO_MS
+}
+
 export interface Usuario {
   id: string
   nome: string

@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { DURACAO_MINUTOS, hojeEmRecife } from '@bemviver/shared'
+import { DURACAO_MINUTOS, hojeEmRecife, podeCancelarConsulta } from '@bemviver/shared'
 import { ehTipoConsulta, instante, temConflito, validarHorario } from '../agenda'
 import { permitir } from '../auth'
 import { prisma } from '../prisma'
@@ -89,6 +89,10 @@ rotasConsultas.post('/:id/cancelar', permitir('paciente', 'recepcao'), async (re
   }
   if (consulta.status !== 'agendada') {
     res.status(409).json({ erro: 'Só é possível cancelar uma consulta agendada' })
+    return
+  }
+  if (req.usuario.perfil === 'paciente' && !podeCancelarConsulta(consulta.inicio)) {
+    res.status(409).json({ erro: 'Só é possível cancelar consultas com pelo menos 24 horas de antecedência' })
     return
   }
 
