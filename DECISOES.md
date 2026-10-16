@@ -340,6 +340,40 @@ Considerei adicionar uma coluna de urgência à tabela de consultas, persistindo
 **Quanto tempo levou**
 
 20 minutos.
+
+## Histórico do paciente com abas Geral e Faltas
+**O que eu vi**
+
+As faltas recorrentes eram um grande problema, então percebi que a recepção precisava de uma maneira de gerir essas faltas por paciente, pois na agenda da recepção, era possível consultar os dados das consultas do dia, mas não visualizar o histórico completo de um paciente nem identificar rapidamente suas faltas anteriores. Sendo assim, implementei os históricos para melhorar o controle e gestão do recepcionista
+
+**O que achei que era**
+
+Uma ação de histórico por paciente, acessível pela tabela da agenda, com uma visão geral das consultas e uma aba separada para faltas.
+
+**Como confirmei**
+
+Verifiquei que a API já tinha dados de consultas associados ao paciente, incluindo data, profissional e status. O status faltou permite identificar as faltas sem criar um novo tipo de registro.
+
+**O que fiz e por quê**
+
+Adicionei uma ação Histórico na tabela da agenda. Ela busca na API as consultas já ocorridas daquele paciente e abre um modal com duas abas:
+
+- Geral: mostra o histórico completo.
+- Faltas: mostra apenas consultas com status faltou.
+A rota do histórico é restrita à recepção. Por enquanto, a aba de faltas filtra os dados já carregados no frontend, evitando uma chamada extra à API ao alternar de aba. Se o histórico crescer, pode fazer sentido filtrar e paginar no backend.
+
+**Como testei**
+
+Os testes da API para histórico e consultas passaram: 9 testes. Também passaram o typecheck da API e do frontend, o ESLint dos arquivos alterados e a verificação de formatação do diff. Além disso, testei pela interface.
+
+**O que considerei e descartei**
+
+Considerei fazer uma chamada à API separada ao abrir a aba Faltas, mas descartei porque a aba representa um subconjunto do histórico já carregado, e criar uma rota só para isso adicionaria complexidade ao código e chamadas desnecessárias à API e ao Banco, já que os dados já estavam disponíveis no frontend.
+
+**Quanto tempo levou**
+
+15 minutos
+
 ---
 
 ## Lembrete com n8n (bônus, se você fizer)
