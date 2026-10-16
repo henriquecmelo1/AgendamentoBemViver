@@ -16,6 +16,7 @@ export default function MarcarConsulta({ profissionalId, data, onMarcada }: Marc
   const [pacienteId, setPacienteId] = useState('')
   const [tipo, setTipo] = useState<TipoConsulta>('primeira')
   const [hora, setHora] = useState(GRADE[0])
+  const [urgente, setUrgente] = useState(false)
   const [mensagem, setMensagem] = useState<{ erro: boolean; texto: string } | null>(null)
 
   useEffect(() => {
@@ -28,8 +29,16 @@ export default function MarcarConsulta({ profissionalId, data, onMarcada }: Marc
     evento.preventDefault()
     setMensagem(null)
     try {
-      await api('/consultas', { metodo: 'POST', corpo: { profissionalId, pacienteId, data, hora, tipo } })
-      setMensagem({ erro: false, texto: 'Consulta marcada.' })
+      const resposta = await api<{ consultasCanceladas?: number }>('/consultas', {
+        metodo: 'POST',
+        corpo: { profissionalId, pacienteId, data, hora, tipo, urgente },
+      })
+      setMensagem({
+        erro: false,
+        texto: urgente
+          ? `Urgência marcada. ${resposta.consultasCanceladas ?? 0} consulta(s) cancelada(s).`
+          : 'Consulta marcada.',
+      })
       onMarcada()
     } catch (e) {
       setMensagem({ erro: true, texto: (e as Error).message })
@@ -65,6 +74,10 @@ export default function MarcarConsulta({ profissionalId, data, onMarcada }: Marc
             ))}
           </Select>
         </Field>
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" checked={urgente} onChange={(e) => setUrgente(e.target.checked)} />
+          Urgência
+        </label>
         <Button type="submit" className="w-full">
           Marcar
         </Button>
