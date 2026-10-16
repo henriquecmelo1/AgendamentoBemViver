@@ -279,6 +279,36 @@ Considerei outras abordagens, como enviar todos os lembretes às 8h do dia anter
 **Quanto tempo levou**
 
 2h e meia
+
+## Marcação de consultas urgentes pela recepção
+
+**O que eu vi**
+
+Percebi que o sistema não tinha uma opção para marcar consultas como urgentes, dificultando o encaixe de pacientes que precisam de atendimento prioritário, mesmo quando o horário desejado já está ocupado.
+
+**O que achei que era**
+
+A recepção precisava de uma forma simples de indicar que uma consulta era urgente, permitindo diferenciar esses casos durante o agendamento sem tornar o fluxo mais complexo.
+
+**Como confirmei**
+
+Analisei o fluxo de marcação de consultas e identifiquei a ausência de uma opção para sinalizar urgências.
+
+**O que fiz e por quê**
+
+Adicionei uma checkbox para que a recepcionista possa marcar uma consulta como urgente. A informação é transmitida entre o front-end e o back-end como um booleano, permitindo tratar a urgência durante o processo de marcação.
+
+**Como testei**
+
+Realizei testes automatizados para verificar o funcionamento da nova funcionalidade e garantir que a informação de urgência fosse tratada corretamente.
+
+**O que considerei e descartei**
+
+Considerei adicionar uma coluna de urgência à tabela de consultas, persistindo essa informação no banco de dados. Entretanto, como a urgência seria utilizada apenas durante o processo de marcação, sem necessidade identificada de consulta posterior, optei por não persistir o dado e manter a solução mais simples, passando-o como um booleano entre o front-end e o back-end.
+
+**Quanto tempo levou**
+
+20 minutos.
 ---
 
 ## Lembrete com n8n (bônus, se você fizer)
