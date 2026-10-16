@@ -89,6 +89,74 @@ describe('cancelamento de consultas', () => {
   })
 })
 
+describe('histórico de consultas do paciente', () => {
+  it('retorna todas as consultas do paciente, da mais recente para a mais antiga', async () => {
+    const recepcao = await criarUsuario('recepcao')
+    const paciente = await criarUsuario('paciente')
+    const outroPaciente = await criarUsuario('paciente')
+    const profissional = await criarUsuario('profissional')
+    const consultaAntiga = await criarConsulta({
+      profissionalId: profissional.id,
+      pacienteId: paciente.id,
+      data: '2024-01-10',
+      hora: '10:00',
+      status: 'realizada',
+    })
+    const consultaRecente = await criarConsulta({
+      profissionalId: profissional.id,
+      pacienteId: paciente.id,
+      data: '2025-03-20',
+      hora: '14:00',
+      status: 'cancelada',
+    })
+    await criarConsulta({
+      profissionalId: profissional.id,
+      pacienteId: paciente.id,
+      data: '2099-04-01',
+      hora: '09:00',
+    })
+    await criarConsulta({
+      profissionalId: profissional.id,
+      pacienteId: outroPaciente.id,
+      data: '2025-04-01',
+      hora: '09:00',
+    })
+
+    const resposta = await request(app)
+      .get(`/pacientes/${paciente.id}/historico`)
+      .set('Authorization', recepcao.auth)
+
+    expect(resposta.status).toBe(200)
+    expect(resposta.body).toHaveLength(2)
+    expect(resposta.body.map((consulta: { id: string }) => consulta.id)).toEqual([
+      consultaRecente.id,
+      consultaAntiga.id,
+    ])
+    expect(resposta.body[0]).toMatchObject({
+      status: 'cancelada',
+      profissionalNome: profissional.nome,
+      especialidade: 'Clínica geral',
+    })
+  })
+
+  it('restringe o histórico à recepção e retorna 404 para paciente inexistente', async () => {
+    const profissional = await criarUsuario('profissional')
+    const recepcao = await criarUsuario('recepcao')
+    const paciente = await criarUsuario('paciente')
+
+    const naoAutorizado = await request(app)
+      .get(`/pacientes/${paciente.id}/historico`)
+      .set('Authorization', profissional.auth)
+    const naoEncontrado = await request(app)
+      .get('/pacientes/id-inexistente/historico')
+      .set('Authorization', recepcao.auth)
+
+    expect(naoAutorizado.status).toBe(403)
+    expect(naoEncontrado.status).toBe(404)
+    expect(naoEncontrado.body.erro).toBe('Paciente não encontrado')
+  })
+})
+
 describe('agendamento urgente', () => {
   it('permite à recepção substituir duas consultas de 30 minutos por uma de uma hora', async () => {
     const recepcao = await criarUsuario('recepcao')
