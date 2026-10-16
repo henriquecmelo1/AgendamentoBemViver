@@ -17,6 +17,7 @@ import { NOME_TIPO } from '@/lib/formato'
 export default function AgendarConsulta() {
   const router = useRouter()
   const [profissionais, setProfissionais] = useState<Profissional[]>([])
+  const [especialidade, setEspecialidade] = useState('')
   const [profissionalId, setProfissionalId] = useState('')
   const [data, setData] = useState('')
   const [tipo, setTipo] = useState<TipoConsulta>('primeira')
@@ -30,6 +31,13 @@ export default function AgendarConsulta() {
       .then(setProfissionais)
       .catch((e: Error) => setErro(e.message))
   }, [])
+
+  const especialidades = [...new Set(profissionais.map((p) => p.especialidade))].sort((a, b) =>
+    a.localeCompare(b, 'pt-BR'),
+  )
+  const profissionaisFiltrados = especialidade
+    ? profissionais.filter((p) => p.especialidade === especialidade)
+    : profissionais
 
   useEffect(() => {
     if (!profissionalId || !data) return
@@ -60,6 +68,24 @@ export default function AgendarConsulta() {
       </div>
 
       <Card className="space-y-4">
+        <Field label="Especialidade">
+          <Select
+            value={especialidade}
+            onChange={(e) => {
+              setEspecialidade(e.target.value)
+              setProfissionalId('')
+              setHora('')
+            }}
+          >
+            <option value="">Todas as especialidades</option>
+            {especialidades.map((opcao) => (
+              <option key={opcao} value={opcao}>
+                {opcao}
+              </option>
+            ))}
+          </Select>
+        </Field>
+
         <Field label="Profissional">
           <Select
             value={profissionalId}
@@ -69,7 +95,7 @@ export default function AgendarConsulta() {
             }}
           >
             <option value="">Selecione</option>
-            {profissionais.map((p) => (
+            {profissionaisFiltrados.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.nome} ({p.especialidade})
               </option>
