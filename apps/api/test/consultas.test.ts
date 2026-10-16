@@ -2,7 +2,7 @@ import request from 'supertest'
 import { describe, expect, it } from 'vitest'
 import { app } from '../src/app'
 import { prisma } from '../src/prisma'
-import { criarConsulta, criarUsuario } from './ajuda'
+import { criarConsulta, criarUsuario, proximaSegunda } from './ajuda'
 
 function dataHoraRecife(instante: Date) {
   const partes = new Map(
@@ -86,5 +86,115 @@ describe('cancelamento de consultas', () => {
 
     expect(resposta.status).toBe(200)
     expect(resposta.body.status).toBe('cancelada')
+  })
+})
+
+describe('agendamento urgente', () => {
+  it('permite à recepção substituir duas consultas de 30 minutos por uma de uma hora', async () => {
+    const recepcao = await criarUsuario('recepcao')
+    const profissional = await criarUsuario('profissional')
+    const pacienteUm = await criarUsuario('paciente')
+    const pacienteDois = await criarUsuario('paciente')
+    const pacienteUrgencia = await criarUsuario('paciente')
+    const data = proximaSegunda()
+    const primeiraConsulta = await criarConsulta({
+      profissionalId: profissional.id,
+      pacienteId: pacienteUm.id,
+      data,
+      hora: '10:00',
+      tipo: 'retorno',
+    })
+    const segundaConsulta = await criarConsulta({
+      profissionalId: profissional.id,
+      pacienteId: pacienteDois.id,
+      data,
+      hora: '10:30',
+      tipo: 'retorno',
+    })
+
+    const resposta = await request(app)
+      .post('/consultas')
+      .set('Authorization', recepcao.auth)
+      .send({
+        profissionalId: profissional.id,
+        pacienteId: pacienteUrgencia.id,
+        data,
+        hora: '10:00',
+        tipo: 'primeira',
+        urgente: true,
+      })
+
+    expect(resposta.status).toBe(201)
+    expect(resposta.body).toMatchObject({ consultasCanceladas: 2 })
+    expect(resposta.body).not.toHaveProperty('urgente')
+    await expect(
+      prisma.consulta.findMany({ where: { id: { in: [primeiraConsulta.id, segundaConsulta.id] } } }),
+    ).resolves.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ status: 'cancelada', canceladaEm: expect.any(Date) }),
+        expect.objectContaining({ status: 'cancelada', canceladaEm: expect.any(Date) }),
+      ]),
+    )
+  })
+
+  it('não deixa paciente marcar urgência nem cancela consultas existentes', async () => {
+    const paciente = await criarUsuario('paciente')
+    const profissional = await criarUsuario('profissional')
+    const pacienteAgendado = await criarUsuario('paciente')
+    const consulta = await criarConsulta({
+      profissionalId: profissional.id,
+      pacienteId: pacienteAgendado.id,
+      data: proximaSegunda(),
+      hora: '10:00',
+    })
+
+    const resposta = await request(app)
+      .post('/consultas')
+      .set('Authorization', paciente.auth)
+      .send({ profissionalId: profissional.id, data: consulta.data, hora: '10:00', tipo: 'primeira', urgente: true })
+
+    expect(resposta.status).toBe(403)
+    await expect(prisma.consulta.findUnique({ where: { id: consulta.id } })).resolves.toMatchObject({
+      status: 'agendada',
+      canceladaEm: null,
+    })
+  })
+
+  it('substitui a consulta do mesmo paciente marcada com outro profissional', async () => {
+    const recepcao = await criarUsuario('recepcao')
+    const outroProfissional = await criarUsuario('profissional')
+    const profissionalDaUrgencia = await criarUsuario('profissional')
+    const pacienteUrgencia = await criarUsuario('paciente')
+    const data = proximaSegunda()
+    const consultaExistente = await criarConsulta({
+      profissionalId: outroProfissional.id,
+      pacienteId: pacienteUrgencia.id,
+      data,
+      hora: '10:00',
+      tipo: 'retorno',
+    })
+
+    const resposta = await request(app)
+      .post('/consultas')
+      .set('Authorization', recepcao.auth)
+      .send({
+        profissionalId: profissionalDaUrgencia.id,
+        pacienteId: pacienteUrgencia.id,
+        data,
+        hora: '10:00',
+        tipo: 'primeira',
+        urgente: true,
+      })
+
+    expect(resposta.status).toBe(201)
+    expect(resposta.body).toMatchObject({
+      profissionalId: profissionalDaUrgencia.id,
+      pacienteId: pacienteUrgencia.id,
+      consultasCanceladas: 1,
+    })
+    await expect(prisma.consulta.findUnique({ where: { id: consultaExistente.id } })).resolves.toMatchObject({
+      status: 'cancelada',
+      canceladaEm: expect.any(Date),
+    })
   })
 })
