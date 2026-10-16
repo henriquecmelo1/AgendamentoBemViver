@@ -1,0 +1,118 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        0
+      ],
+      "id": "73dc8429-b4f3-44bc-acec-5b462caebe24",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "url": "http://host.docker.internal:3333/integracoes/lembretes",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "data",
+              "value": "2026-10-16"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-chave-integracao",
+              "value": "chave-local-do-n8n"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        224,
+        0
+      ],
+      "id": "be112108-c90f-4124-94d6-ec900b9d85b3",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "fromEmail": "lembretes@bemviver.com.br",
+        "toEmail": "={{ $json.pacienteEmail }}",
+        "subject": "=Lembrete - Consulta amanhã às  {{ $json.hora }}",
+        "html": "=Olá, {{ $json.pacienteNome }}!\n\nEste é um lembrete da sua consulta:\n\nData: {{ $json.data }}\nHora: {{ $json.hora }}\nProfissional: {{ $json.profissionalNome }}\nEspecialidade: {{ $json.especialidade }}\n\nSe não puder comparecer, entre em contato para remarcar.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        464,
+        0
+      ],
+      "id": "bd76d49f-5547-4645-b632-fa58aff47f51",
+      "name": "Send an Email",
+      "webhookId": "cc1c52fd-7e98-42d2-a5b8-cb767efca1a7",
+      "credentials": {
+        "smtp": {
+          "id": "qA4uLxKwcQqGJdeG",
+          "name": "SMTP account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Send an Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "ee9e08b5-4b90-4402-b967-d7d0853f6c12",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "4e05e5f82e4d134c6f655bbb4017cadcde701048364e8e1a4200220562c1faad"
+  },
+  "nodeGroups": [],
+  "id": "Sr07LYFV7BNul9VZ",
+  "tags": []
+}
