@@ -439,6 +439,40 @@ Testei cada etapa isoladamente antes de juntar tudo:
 
 ## Ordem das funcionalidades, com justificativa
 
+1. **Lembrete automático da consulta (24h antes)** *(implementada)*
+   Havia muitas faltas, e boa parte vem de esquecimento. É a ação com melhor relação entre esforço e impacto sobre o problema principal, e não depende de ninguém da equipe lembrar de ligar.
+
+2. **Relatório de faltas** *(implementada)*
+   Complementa o lembrete: sem medir, não dá para saber se as faltas caíram nem quem falta com recorrência (alguns pacientes faltam toda semana). Permite agir sobre os casos reincidentes.
+
+3. **Confirmação de presença pelo paciente**
+   Também ataca as faltas, e vai além do lembrete: o paciente responde, e a clínica sabe com antecedência quais horários provavelmente ficarão vagos. Não tive tempo de implementar.
+   *Como faria:* adicionar o status `confirmada` ao campo de status da consulta (ou um campo `confirmadaEm`). Incluir no e-mail do lembrete um link com um token único e assinado por consulta (`/confirmar/:token`), que abre uma página simples com o botão "Confirmo presença" e chama uma rota pública da API que valida o token e atualiza o status. Na agenda do recepcionista, mostrar um indicador de confirmada/não confirmada. Quem não confirmar até certo prazo pode receber um segundo aviso ou ser liberado para a lista de espera.
+
+4. **Histórico de consultas do paciente** *(implementada)*
+   Ajuda o recepcionista a entender o contexto do paciente (consultas anteriores, faltas, cancelamentos) na hora de atender ou remarcar.
+
+5. **Lista de espera para horários liberados**
+   Atende pacientes que não encontraram horário compatível e aproveita cancelamentos que, sem isso, virariam horário ocioso. Não tive tempo de implementar.
+   *Como faria:* criar a tabela `listaEspera` (paciente, profissional ou especialidade, período desejado, criadoEm, status). Ao cancelar uma consulta, a API procura o primeiro da fila compatível com aquele horário e o notifica por e-mail com um link para aceitar, com prazo curto. Se aceitar, a consulta é criada e a entrada sai da fila. Se não responder no prazo, avança para o próximo. A criação da consulta reaproveita a validação de conflito de horário que já existe.
+
+6. **Busca de profissionais por especialidade** *(implementada)*
+   Ajuda o paciente a encontrar o profissional que procura com menos esforço. Fica abaixo das funcionalidades que atacam as faltas porque o problema relatado é a ociosidade da agenda, e não a dificuldade de achar profissional.
+
+7. **Remarcação pelo próprio paciente**
+   Fica abaixo porque já dá para fazer de outra forma: cancelar a consulta e marcar uma nova. É uma conveniência, não uma capacidade nova.
+   *Como faria:* uma rota `PATCH /consultas/:id/remarcar` que recebe a nova data e hora, valida que a consulta é do paciente logado, que está `agendada` e que o novo horário está livre (mesma regra de conflito da criação), e atualiza em uma única transação, para que o horário antigo só seja liberado se o novo for confirmado. Na tela, um botão "Remarcar" que reaproveita o seletor de horários da criação.
+
+8. **Bloqueio de agenda por período (férias)**
+   Pelo mesmo motivo: o profissional pode cancelar dia por dia, embora seja trabalhoso.
+   *Como faria:* adicionar na tela da agenda do profissional um seletor de intervalo de datas (início e fim). Ao confirmar, a API percorre cada dia do intervalo e cria uma folga para ele, reaproveitando o mesmo mecanismo de folga por dia que já existe, tudo em uma única transação (`prisma.$transaction`), para que ou todos os dias sejam criados ou nenhum. Dias que já tenham folga são ignorados, evitando duplicidade. Como não há tabela nova, o restante do sistema (geração de horários livres e validação na criação de consulta) continua funcionando sem mudanças. O fluxo funconaria de forma similar a como está atualmente, mas com a diferença de que as férias seriam por intervalos, não por dia único como é hoje em dia.
+
+9. **Exportação da agenda do dia em PDF**
+   Conveniência para quem prefere a agenda impressa, mas o recepcionista já vê a agenda do dia na tela. Pode ser feita depois, com uma rota que renderiza a lista de consultas do dia em PDF.
+
+10. **Tema escuro na área do paciente**
+    Baixo impacto funcional, é apenas estético.
+
 ## Como usei IA
 
 ## O que ficou de fora
