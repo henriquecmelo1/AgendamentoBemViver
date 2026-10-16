@@ -285,9 +285,33 @@ Considerei outras abordagens, como enviar todos os lembretes às 8h do dia anter
 
 **Como montei o fluxo**
 
+O fluxo fica em `n8n/lembrete.json` e tem estes nós:
+
+Schedule Trigger (todo dia às 07:00) → HTTP Request → Loop Over Items (lote de 1) → Wait → Send Email.
+
+- **HTTP Request:** uma única chamada por dia a `GET /integracoes/lembretes`, com o cabeçalho `x-chave-integracao`. Inicialmente enviei o parâmetro `data` com o dia seguinte (`{{ $now.setZone('America/Recife').plus({ days: 1 }).toFormat('yyyy-MM-dd') }}`), mas depois vi que, sem nenhum Query Parameter, a rota já usa dia+1 por padrão. A chave está direto no cabeçalho (valor de desenvolvimento local), e em produção iria para uma credencial do n8n.
+- **Loop Over Items:** processa uma consulta por vez, para que cada uma tenha a sua própria espera. Como a response já vinha ordenada, não foi necessário ordenar no workflow, já que uma response fora de ordem travaria o envio de email de consultas anteriores.
+- **Wait (At Specified Time):** pausa até 24h antes da consulta, calculado com `DateTime.fromISO(data + 'T' + hora, { zone: 'America/Recife' }).minus({ hours: 24 }).toISO()`. Rodando às 07:00, o horário de "24h antes" das consultas de amanhã a partir das 07:00 cai entre 07:00 e 23:59 do dia atual, então cada uma é agendada em uma única execução. Consultas de amanhã antes das 07:00 já passaram do horário de 24h antes, e o Wait segue imediatamente, enviando o e-mail na hora da execução.
+- **Send Email:** SMTP do Mailpit (`mailpit:1025`, sem autenticação), com nome do paciente, data, hora, profissional e especialidade.
+- **Tratamento de erro:** o Send Email usa *Continue (using error output)*. A saída de erro passa por um segundo e-mail de alerta (genérico, sem dados da consulta) e volta para o loop, então a falha de uma consulta não interrompe as demais.
+
 **Como testei**
 
+Testei cada etapa isoladamente antes de juntar tudo:
+
+1. Executei o HTTP Request sozinho e conferi que retornava as consultas do dia (`[33]` itens no teste).
+2. Troquei o Wait por um intervalo curto (poucos segundos) para validar o loop e o envio sem esperar horas, e conferi os e-mails no Mailpit (`http://localhost:8025`).
+3. Validei a expressão de data do Wait com consultas do seed, comparando o horário calculado com o esperado (consulta às 08:00 → espera até 08:00 do dia anterior).
+4. Restaurei as configurações reais e exportei o fluxo.
+
 **O que mudaria para usar em produção**
+
+- **Evitar reenvio e perda de lembretes:** a API guardaria `lembreteEnviadoEm` na consulta e ofereceria uma rota para marcar como enviada. Hoje, reexecutar o fluxo manualmente reenvia tudo, e uma queda do n8n durante o dia perde os lembretes pendentes.
+- **Consultas canceladas ou remarcadas:** os dados são lidos uma vez por dia, às 07:00, então uma consulta cancelada depois ainda recebe o lembrete. Em produção, o fluxo conferiria o status na API logo antes de enviar.
+- **Consultas sem 24h de antecedência:** as marcadas depois da execução das 07:00 para o dia seguinte não recebem lembrete, e as de amanhã antes das 07:00 recebem o e-mail imediatamente, e não 24h antes. Seria preciso uma regra de produto (por exemplo, envio imediato para as marcadas tarde, e execução mais cedo ou mais de uma vez por dia).
+- **Isolar falhas:** trocar o loop sequencial por um sub-workflow por consulta (*Execute Workflow*), para que uma execução longa não carregue todas as consultas do dia, e adicionar *Retry On Fail* antes do alerta.
+- **Alertas e monitoramento:** o alerta atual não diz qual consulta falhou. Em produção, incluiria paciente e mensagem de erro, usaria um *Error Workflow* para falhas gerais (como a busca inicial) e enviaria para Slack ou Telegram em vez de e-mail.
+- **Infraestrutura e segredos:** chave de integração em credencial do n8n (Header Auth) com rotação, SMTP real (SES, SendGrid etc.) com credenciais seguras, HTTPS entre n8n e API, fuso horário do workflow configurado como `America/Recife` e n8n com Postgres em vez de SQLite.
 
 ## Ordem das funcionalidades, com justificativa
 
