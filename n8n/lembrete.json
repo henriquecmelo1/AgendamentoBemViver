@@ -1,12 +1,12 @@
 {
-  "name": "My workflow",
+  "name": "24h antes",
   "nodes": [
     {
       "parameters": {
         "rule": {
           "interval": [
             {
-              "triggerAtHour": 8
+              "triggerAtHour": 7
             }
           ]
         }
@@ -17,21 +17,92 @@
         0,
         0
       ],
-      "id": "73dc8429-b4f3-44bc-acec-5b462caebe24",
+      "id": "0497256c-9a7c-4888-b484-da06d1e5b0bc",
       "name": "Schedule Trigger"
     },
     {
       "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        400,
+        0
+      ],
+      "id": "d6d05556-e395-4c0c-9d75-b12f2740fcc3",
+      "name": "Loop Over Items",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "resume": "specificTime",
+        "dateTime": "={{ DateTime.fromISO($json.data + 'T' + $json.hora, { zone: 'America/Recife' }).minus({ hours: 24 }).toISO() }}"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        624,
+        208
+      ],
+      "id": "acfffd78-9825-4efe-9385-292b8587af12",
+      "name": "Wait",
+      "webhookId": "7f82a17e-3ca0-431c-b32e-8d4c87bda908",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "fromEmail": "lembretes@bemviver.com.br",
+        "toEmail": "={{ $json.pacienteEmail }}",
+        "subject": "=Lembrete - Consulta amanhã às  {{ $json.hora }}",
+        "html": "=Olá, {{ $json.pacienteNome }}!\n\nEste é um lembrete da sua consulta:\n\nData: {{ $json.data }}\nHora: {{ $json.hora }}\nProfissional: {{ $json.profissionalNome }}\nEspecialidade: {{ $json.especialidade }}\n\nSe não puder comparecer, entre em contato para remarcar.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        800,
+        208
+      ],
+      "id": "6207c40d-21bb-493c-98e5-20a79728f992",
+      "name": "Send an Email",
+      "webhookId": "cc1c52fd-7e98-42d2-a5b8-cb767efca1a7",
+      "credentials": {
+        "smtp": {
+          "id": "qA4uLxKwcQqGJdeG",
+          "name": "SMTP account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "fromEmail": "lembretes@bemviver.com.br",
+        "toEmail": "=admin@bemviver.com.br",
+        "subject": "=Erro envio de email",
+        "html": "=Erro no envio de email de lembrete de consulta",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1024,
+        224
+      ],
+      "id": "b71b0ccf-1241-4659-9f29-88ff53bb07b7",
+      "name": "Send an Email1",
+      "webhookId": "cc1c52fd-7e98-42d2-a5b8-cb767efca1a7",
+      "credentials": {
+        "smtp": {
+          "id": "qA4uLxKwcQqGJdeG",
+          "name": "SMTP account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
         "url": "http://host.docker.internal:3333/integracoes/lembretes",
-        "sendQuery": true,
-        "queryParameters": {
-          "parameters": [
-            {
-              "name": "data",
-              "value": "2026-10-16"
-            }
-          ]
-        },
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -46,35 +117,11 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
       "position": [
-        224,
+        208,
         0
       ],
-      "id": "be112108-c90f-4124-94d6-ec900b9d85b3",
-      "name": "HTTP Request"
-    },
-    {
-      "parameters": {
-        "fromEmail": "lembretes@bemviver.com.br",
-        "toEmail": "={{ $json.pacienteEmail }}",
-        "subject": "=Lembrete - Consulta amanhã às  {{ $json.hora }}",
-        "html": "=Olá, {{ $json.pacienteNome }}!\n\nEste é um lembrete da sua consulta:\n\nData: {{ $json.data }}\nHora: {{ $json.hora }}\nProfissional: {{ $json.profissionalNome }}\nEspecialidade: {{ $json.especialidade }}\n\nSe não puder comparecer, entre em contato para remarcar.",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.emailSend",
-      "typeVersion": 2.1,
-      "position": [
-        464,
-        0
-      ],
-      "id": "bd76d49f-5547-4645-b632-fa58aff47f51",
-      "name": "Send an Email",
-      "webhookId": "cc1c52fd-7e98-42d2-a5b8-cb767efca1a7",
-      "credentials": {
-        "smtp": {
-          "id": "qA4uLxKwcQqGJdeG",
-          "name": "SMTP account"
-        }
-      }
+      "id": "8b8bd66f-5850-4cd5-832b-26e089425081",
+      "name": "HTTP Request1"
     }
   ],
   "pinData": {},
@@ -83,18 +130,70 @@
       "main": [
         [
           {
-            "node": "HTTP Request",
+            "node": "HTTP Request1",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "HTTP Request": {
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
       "main": [
         [
           {
             "node": "Send an Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send an Email": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send an Email1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send an Email1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
             "type": "main",
             "index": 0
           }
@@ -107,12 +206,11 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "ee9e08b5-4b90-4402-b967-d7d0853f6c12",
+  "versionId": "79f6bb94-dc1d-47b9-948b-6d9eaa744e43",
   "meta": {
-    "templateCredsSetupCompleted": true,
     "instanceId": "4e05e5f82e4d134c6f655bbb4017cadcde701048364e8e1a4200220562c1faad"
   },
   "nodeGroups": [],
-  "id": "Sr07LYFV7BNul9VZ",
+  "id": "ruIEWjnnTengCJea",
   "tags": []
 }
