@@ -280,6 +280,37 @@ Considerei outras abordagens, como enviar todos os lembretes às 8h do dia anter
 
 2h e meia
 
+## Bloqueio de cancelamentos com menos de 24 horas de antecedência
+
+**O que eu vi**
+
+Identifiquei o problema de cancelamentos realizados no mesmo dia da consulta, gerando prejuízos financeiros e dificultando o aproveitamento dos horários disponíveis.
+
+**O que achei que era**
+
+A ausência de uma restrição para cancelamentos próximos ao horário da consulta permitia que os pacientes desmarcassem em cima da hora, sem tempo suficiente para a recepção reorganizar a agenda ou encaixar outro paciente.
+
+**Como confirmei**
+
+Analisei o fluxo de cancelamento e identifiquei que não havia um bloqueio que impedisse o próprio paciente de cancelar uma consulta com menos de 24 horas de antecedência.
+
+**O que fiz e por quê**
+
+Implementei uma restrição que impede o paciente de cancelar a própria consulta quando faltam menos de 24 horas para o atendimento. Também ajustei a interface para deixar a restrição clara ao usuário, evitando confusão e tentativas de cancelamento sem sucesso.
+
+**Como testei**
+
+Adicionei testes automatizados para verificar o comportamento do cancelamento dentro e fora do limite de 24 horas, garantindo que a restrição fosse aplicada corretamente.
+
+**O que considerei e descartei**
+
+Considerei manter o cancelamento disponível e apenas alertar o paciente sobre a proximidade da consulta, mas optei por bloquear a ação para garantir o cumprimento da regra. A solução busca reduzir prejuízos com cancelamentos de última hora, embora não impeça faltas ou cancelamentos realizados por outros meios.
+
+**Quanto tempo levou**
+
+15 minutos.
+
+
 ## Marcação de consultas urgentes pela recepção
 
 **O que eu vi**
