@@ -2,8 +2,6 @@
 
 Use uma seção para cada problema investigado ou decisão tomada, copiando o bloco abaixo quantas vezes precisar. Escreva do seu jeito, sem se preocupar com formalidade.
 
-# Decisões
-
 ## Agenda não atualizava ao trocar de profissional
 
 **O que eu vi**
@@ -374,6 +372,36 @@ Considerei fazer uma chamada à API separada ao abrir a aba Faltas, mas descarte
 
 15 minutos
 
+## Filtro de profissionais por especialidade no agendamento
+
+**O que eu vi**
+
+Percebi que, para marcar uma consulta, o paciente precisava procurar na lista de profissionais qual ou quais atendiam na especialidade desejada. Isso tornava a busca mais trabalhosa.
+
+**O que achei que era**
+
+Achei que um filtro por especialidade ajudaria o paciente a encontrar mais facilmente o profissional adequado.
+
+**Como confirmei**
+
+Verifiquei que a tela de agendamento já carregava a lista de profissionais com seus nomes e especialidades.
+
+**O que fiz e por quê**
+
+Adicionei um select de especialidade à tela. Ao escolher uma opção, a lista de profissionais é filtrada para mostrar somente aqueles daquela especialidade. Mantive a opção de ver todas as especialidades e limpei o profissional selecionado quando o filtro muda, para evitar manter uma seleção que não corresponde ao filtro atual.
+
+**Como testei**
+
+Adicionei um teste automatizado que verifica a lista inicial de profissionais e confirma que, ao selecionar uma especialidade, só aparecem profissionais correspondentes. Também executei os testes pela interface, os do workspace web, o typecheck e o lint dos arquivos alterados.
+
+**O que considerei e descartei**
+
+Considerei fazer o filtro no back-end, mas descartei essa opção porque o front-end já recebia todas as informações necessárias — nome e especialidade — para filtrar a lista. Assim, foi possível resolver a dificuldade sem alterar a API.
+
+**Quanto tempo levou**
+
+5 minutos.
+
 ---
 
 ## Lembrete com n8n (bônus, se você fizer)
@@ -408,35 +436,6 @@ Testei cada etapa isoladamente antes de juntar tudo:
 - **Alertas e monitoramento:** o alerta atual não diz qual consulta falhou. Em produção, incluiria paciente e mensagem de erro, usaria um *Error Workflow* para falhas gerais (como a busca inicial) e enviaria para Slack ou Telegram em vez de e-mail.
 - **Infraestrutura e segredos:** chave de integração em credencial do n8n (Header Auth) com rotação, SMTP real (SES, SendGrid etc.) com credenciais seguras, HTTPS entre n8n e API, fuso horário do workflow configurado como `America/Recife` e n8n com Postgres em vez de SQLite.
 
-## Filtro de profissionais por especialidade no agendamento
-
-**O que eu vi**
-
-Percebi que, para marcar uma consulta, o paciente precisava procurar na lista de profissionais qual ou quais atendiam na especialidade desejada. Isso tornava a busca mais trabalhosa.
-
-**O que achei que era**
-
-Achei que um filtro por especialidade ajudaria o paciente a encontrar mais facilmente o profissional adequado.
-
-**Como confirmei**
-
-Verifiquei que a tela de agendamento já carregava a lista de profissionais com seus nomes e especialidades.
-
-**O que fiz e por quê**
-
-Adicionei um select de especialidade à tela. Ao escolher uma opção, a lista de profissionais é filtrada para mostrar somente aqueles daquela especialidade. Mantive a opção de ver todas as especialidades e limpei o profissional selecionado quando o filtro muda, para evitar manter uma seleção que não corresponde ao filtro atual.
-
-**Como testei**
-
-Adicionei um teste automatizado que verifica a lista inicial de profissionais e confirma que, ao selecionar uma especialidade, só aparecem profissionais correspondentes. Também executei os testes pela interface, os do workspace web, o typecheck e o lint dos arquivos alterados.
-
-**O que considerei e descartei**
-
-Considerei fazer o filtro no back-end, mas descartei essa opção porque o front-end já recebia todas as informações necessárias — nome e especialidade — para filtrar a lista. Assim, foi possível resolver a dificuldade sem alterar a API.
-
-**Quanto tempo levou**
-
-5 minutos.
 
 ## Ordem das funcionalidades, com justificativa
 
